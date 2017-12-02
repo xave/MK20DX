@@ -1,0 +1,239 @@
+// concat_MK.txt
+/* This is s concatanation of several fi
+ * common.h
+ * sys
+*/
+/*
+ * File:        common.h
+ * Purpose:     File to be included by all project files
+ *
+ * Notes:
+ *  This is a common header file for Teensy 3.1 projects.  It should
+ *  be included in all Teensy 3.1 projects.
+ *
+ *  If you choose, you can move the PRDIV_VAL and VDIV_VAL settings
+ *  to a project-specific file.  This would let you build projects
+ *  with different system clock frequencies.
+ *
+ *  This file is derived from the original found in the Freescale
+ *  CodeWarrior source files.  There have been several variations
+ *  of these on the Internet; one such is kinetis_50MHz_sc, though
+ *  I can't swear that is where this file came from originally.
+ *
+ *  12 Apr 14  KEL
+ */
+
+#ifndef _COMMON_H_
+#define _COMMON_H_
+
+
+#include  <stdint.h>
+#include  "mk20d7.h"
+
+/*
+ *  Define characteristics of the target platform.
+ *
+ *  Choose PRDIV_VAL and VDIV_VAL based on your project hardware and system
+ *  needs.
+ *
+ *  Note that PRDIV_VAL is *not* the value written to MCG_C5!  PRDIV_VAL is
+ *  an integer divisor for prescaling the external clock for use by the PLL.
+ *  PRDIV_VAL must be selected so that:
+ *    XTAL_FREQ_HZ / PRDIV_VAL is between 2 MHz and 4 Mhz.
+ *
+ *  Note that VDIV_VAL is *not* the value written to MCG_C6!  VDIV_VAL is
+ *  an integer multiplier for creating the final PLL frequency.
+ *  VDIV_VAL must be selected so that:
+ *    (XTAL_FREQ_HZ / PRDIV_VAL) * VDIV_VAL is between 48 MHz and 100 MHz.
+ *
+ * The final clock frequency is determined by PRDIV_VAL and VDIV_VAL.  Here are
+ * some sample values for a Teensy 3.1:
+ *    For system clock of	PRDIV_VAL	VDIV_VAL
+ *    -------------------	---------	--------
+ *         48 MHz			    8		   24
+ *		   64 MHz				8		   32
+ *		   72 MHz			    8		   36
+ *
+ */
+#define PRDIV_VAL			8				/* PLL prescaler */
+#define VDIV_VAL			32				/* PLL multiplier */
+
+/*
+ *  Optionally define the system console (one of the UARTs) for serial I/O.
+ *  The value for TERM_PORT must be a UART base pointer, such as
+ *  UART0_BASE_PTR.
+ *  The value for TERMINAL_BAUD must be the baud rate, such as
+ *  115200.
+ *
+ *  If your project does not include any of the UART drivers, these
+ *  defines are meaningless and can be set to anything.
+ */
+#define TERM_PORT           UART0_BASE_PTR
+#define TERMINAL_BAUD       115200
+
+
+extern  int32_t				mcg_clk_hz;		// following PLL init, holds actual MCG clock in Hz
+extern  int32_t				mcg_clk_khz;	// following PLL init, holds actual MCG clock in kHz
+extern  int32_t				core_clk_khz;	// following PLL init, holds actual core clock in kHz
+extern  int32_t				periph_clk_khz;	// following PLL init, holds actual peripheral clock in kHz
+
+/********************************************************************/
+
+#endif /* _COMMON_H_ */
+/*
+ * File:    pll_init.h
+ * Purpose: pll_driver specific declarations
+ *
+ * Notes:
+ */
+#ifndef __MCG_H__
+#define __MCG_H__
+/********************************************************************/
+
+// Constants for use in pll_init
+#define NO_OSCINIT 0
+#define OSCINIT 1
+
+#define OSC_0 0
+#define OSC_1 1
+
+#define LOW_POWER 0
+#define HIGH_GAIN 1
+
+#define CANNED_OSC  0
+#define CRYSTAL 1
+
+#define PLL_0 0
+#define PLL_1 1
+
+#define PLL_ONLY 0
+#define MCGOUT 1
+
+// MCG Mode defines
+/*
+#define FEI  1
+#define FEE  2
+#define FBI  3
+#define FBE  4
+#define BLPI 5
+#define BLPE 6
+#define PBE  7
+#define PEE  8
+*/
+
+#define BLPI 1
+#define FBI  2
+#define FEI  3
+#define FEE  4
+#define FBE  5
+#define BLPE 6
+#define PBE  7
+#define PEE  8
+
+// IRC defines
+#define SLOW_IRC 0
+#define FAST_IRC 1
+
+
+unsigned char fll_rtc_init(unsigned char, unsigned char);
+
+
+// prototypes
+void rtc_as_refclk(void);
+int fee_fei(int slow_irc_freq);
+int fei_fbe(int crystal_val, unsigned char hgo_val, unsigned char erefs_val);
+int fbe_fei(int slow_irc_freq);
+int fei_fbi(int irc_freq, unsigned char irc_select);
+int fbi_fei(int slow_irc_freq);
+int fbe_pbe(int crystal_val, signed char prdiv_val, signed char vdiv_val);
+int pbe_pee(int crystal_val);
+int pee_pbe(int crystal_val);
+int pbe_fbe(int crystal_val);
+int fbe_fbi(int irc_freq, unsigned char irc_select);
+int fbi_fbe(int crystal_val, unsigned char hgo_val, unsigned char erefs_val);
+int fbi_fee(int crystal_val, unsigned char hgo_val, unsigned char erefs_val);
+int fbe_fee(int crystal_val);
+int fee_fbe(int crystal_val);
+int pbe_blpe(int crystal_val);
+int blpe_pbe(int crystal_val, signed char prdiv_val, signed char vdiv_val);
+int blpe_fbe(int crystal_val);
+int fbi_blpi(int irc_freq, unsigned char irc_select);
+int blpi_fbi(int irc_freq, unsigned char irc_select);
+int fei_fee(int crystal_val, unsigned char hgo_val, unsigned char erefs_val);
+int fee_fbi(int irc_freq, unsigned char irc_select);
+int fbe_blpe(int crystal_val);
+
+int pll_init(int crystal_val, unsigned char hgo_val, unsigned char erefs_val, signed char prdiv_val, signed char vdiv_val, unsigned char mcgout_select);
+
+int fll_freq(int fll_ref);
+unsigned char what_mcg_mode(void);
+unsigned char atc(unsigned char irc_select, int irc_freq, int mcg_out_freq);
+void clk_monitor_0(unsigned char en_dis);
+
+#if (defined(IAR))
+	__ramfunc void set_sys_dividers(uint32 outdiv1, uint32 outdiv2, uint32 outdiv3, uint32 outdiv4);
+#elif (defined(CW))
+	__relocate_code__ 
+	void set_sys_dividers(uint32 outdiv1, uint32 outdiv2, uint32 outdiv3, uint32 outdiv4);
+#endif	
+
+
+
+
+/********************************************************************/
+#endif /* __MCG_H__ */
+/*
+ * File:	start.h
+ * Purpose:	Kinetis start up routines.
+ *
+ * Notes:
+ * Modified from original Freescale distribution; removed CPU identify and
+ * flash identify prototypes.  4 Apr 14 KEL
+ */
+
+#ifndef __START_H__
+#define __START_H__
+
+#include "common.h"
+
+// Function prototypes
+void start(void);
+
+
+#endif /*__START_H__*/
+/*
+ * File:    startup.h
+ * Purpose: Determine cause of Reset and which processor is running
+ *
+ * Notes:   
+ */
+
+#ifndef _STARTUP_H_
+#define _STARTUP_H_
+
+/********************************************************************/
+
+void common_startup(void);
+
+/********************************************************************/
+
+#endif /* _STARTUP_H_ */
+/*
+ * File:        sysinit.h
+ * Purpose:     Kinetis Configuration
+ *              Initializes processor to a default state
+ *
+ * Notes:
+ *
+ */
+
+/********************************************************************/
+
+// function prototypes
+void			sysinit(void);
+void			trace_clk_init(void);
+void			fb_clk_init(void);
+int32_t			pll_init(int8_t  prdiv_val, int8_t  vdiv_val);
+void			wdog_disable(void);
+
+/********************************************************************/
